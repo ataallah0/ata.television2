@@ -3,69 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون آنلاین عطاالله</title>
+    <title>تلویزیون مسافران | پخش ۲۴ ساعته</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; text-align: center; }
-        #header { background: #1a1a1a; padding: 10px; border-bottom: 3px solid #e50914; }
-        .player-container { height: calc(100vh - 80px); background: #000; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; }
-        #info-bar { position: absolute; bottom: 20px; width: 100%; pointer-events: none; }
-        .status-tag { background: rgba(0,0,0,0.8); color: #f1c40f; padding: 10px 20px; border-radius: 20px; border: 1px solid #f1c40f; font-size: 14px; }
+        body { background: #000; color: #fff; margin: 0; font-family: Tahoma, Arial; text-align: center; overflow: hidden; }
+        #header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #e50914; box-shadow: 0 0 15px rgba(229,9,20,0.5); }
+        .video-box { height: calc(100vh - 70px); position: relative; background: #000; }
+        video { width: 100%; height: 100%; }
+        #status-bar { position: absolute; bottom: 20px; width: 100%; pointer-events: none; }
+        .tag { background: rgba(0,0,0,0.7); color: #f1c40f; padding: 8px 15px; border-radius: 15px; border: 1px solid #f1c40f; font-size: 14px; }
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#111; z-index:99; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+        .btn { padding: 15px 40px; background:#e50914; color:#white; border:none; border-radius:30px; font-size:20px; cursor:pointer; font-weight:bold; color:white; }
     </style>
 </head>
 <body>
 
-    <div id="header">
-        <h3 style="margin:0; color: #e50914;">📺 شبکه اختصاصی سریال و انیمیشن</h3>
+    <div id="overlay">
+        <h2 style="color:#e50914">شبکه سریال مسافران</h2>
+        <button class="btn" onclick="launch()">🔴 ورود به پخش زنده</button>
     </div>
 
-    <div class="player-container">
-        <div id="video-slot" style="height: 100%;"></div>
-        <div id="info-bar">
-            <div id="current-title" class="status-tag">در حال بارگذاری...</div>
-        </div>
+    <div id="header"><h3 style="margin:0;">تلویزیون آنلاین عطاالله</h3></div>
+
+    <div class="video-box">
+        <video id="tv" controls playsinline></video>
+        <div id="status-bar"><span id="info" class="tag">در حال دریافت سیگنال...</span></div>
     </div>
 
     <script>
-        // توجه: این آی‌دی‌ها نمونه هستند. اگر ۴۰۴ داد یعنی این ویدیوها از آپارات پاک شده‌اند.
-        const playlist = [
-            { id: 'vpe8767', title: 'سریال مسافران - قسمت ۱', duration: 2100 },
-            { id: 'm1r2345', title: 'انیمیشن صلح‌بانان - قسمت ۱', duration: 1260 },
-            { id: 'a908765', title: 'آنشرلی - قسمت ۱', duration: 1380 }
-        ];
-
+        const player = document.getElementById('tv');
+        const info = document.getElementById('info');
+        
+        // تنظیمات پخش
+        const epDuration = 2100; // زمان هر قسمت: ۳۵ دقیقه (۳۵ * ۶۰ ثانیه)
+        const totalEpisodes = 70;
         const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
 
-        function sync() {
+        function getStream() {
             const now = Math.floor(Date.now() / 1000);
-            const totalDuration = playlist.reduce((a, b) => a + b.duration, 0);
-            let elapsed = (now - epochStart) % totalDuration;
+            const totalCycle = totalEpisodes * epDuration;
+            const elapsed = (now - epochStart) % totalCycle;
             
-            let accumulated = 0;
-            for (let item of playlist) {
-                if (elapsed < accumulated + item.duration) {
-                    const seek = Math.floor(elapsed - accumulated);
-                    render(item.id, seek, item.title);
-                    break;
-                }
-                accumulated += item.duration;
+            const epIndex = Math.floor(elapsed / epDuration) + 1;
+            const seekTime = elapsed % epDuration;
+            
+            // لینک‌های امن HTTPS از سرور مستقیم
+            const epNum = epIndex < 10 ? '0' + epIndex : epIndex;
+            const videoUrl = `https://dl3.pishro-movie.com/Serial/Mosaferan/LQ/Mosaferan%20E${epNum}%20(LQ).mp4`;
+            
+            return { url: videoUrl, seek: seekTime, title: "مسافران - قسمت " + epIndex };
+        }
+
+        function sync() {
+            const stream = getStream();
+            if (player.getAttribute('data-active') !== stream.url) {
+                player.src = stream.url;
+                player.currentTime = stream.seek;
+                player.setAttribute('data-active', stream.url);
+                info.innerText = "در حال پخش: " + stream.title;
+            }
+            
+            // اگر اختلاف زمانی پلیر با زمان واقعی زیاد شد، اصلاحش کن
+            if (Math.abs(player.currentTime - stream.seek) > 10) {
+                player.currentTime = stream.seek;
             }
         }
 
-        function render(id, time, title) {
-            const container = document.getElementById('video-slot');
-            // آدرس امبد مستقیم آپارات
-            const embedUrl = "https://www.aparat.com/video/video/embed/videohash/" + id + "/vt/" + time;
-            
-            if (container.getAttribute('data-id') !== id) {
-                container.innerHTML = '<iframe src="' + embedUrl + '" allowFullScreen="true"></iframe>';
-                container.setAttribute('data-id', id);
-                document.getElementById('current-title').innerText = "در حال پخش: " + title;
-            }
+        function launch() {
+            document.getElementById('overlay').style.display = 'none';
+            sync();
+            player.play();
+            setInterval(sync, 10000); // هماهنگی هر ۱۰ ثانیه
         }
 
-        sync();
-        setInterval(sync, 15000);
+        player.onerror = () => {
+            info.innerText = "خطا در اتصال به منبع. در حال تلاش مجدد...";
+            setTimeout(sync, 5000);
+        };
     </script>
 </body>
 </html>

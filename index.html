@@ -2,83 +2,59 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون مسافران | پخش ۲۴ ساعته</title>
+    <title>تلویزیون مسافران | پخش زنده امن</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: Tahoma, Arial; text-align: center; overflow: hidden; }
-        #header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #e50914; box-shadow: 0 0 15px rgba(229,9,20,0.5); }
-        .video-box { height: calc(100vh - 70px); position: relative; background: #000; }
-        video { width: 100%; height: 100%; }
-        #status-bar { position: absolute; bottom: 20px; width: 100%; pointer-events: none; }
-        .tag { background: rgba(0,0,0,0.7); color: #f1c40f; padding: 8px 15px; border-radius: 15px; border: 1px solid #f1c40f; font-size: 14px; }
-        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#111; z-index:99; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-        .btn { padding: 15px 40px; background:#e50914; color:#white; border:none; border-radius:30px; font-size:20px; cursor:pointer; font-weight:bold; color:white; }
+        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; text-align: center; }
+        #header { background: #1a1a1a; padding: 15px; border-bottom: 2px solid #e50914; }
+        video { width: 100%; height: 75vh; background: #000; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        button { padding: 15px 40px; background: #e50914; color: white; border: none; border-radius: 30px; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <h2 style="color:#e50914">شبکه سریال مسافران</h2>
-        <button class="btn" onclick="launch()">🔴 ورود به پخش زنده</button>
+        <h1>تلویزیون عطاالله</h1>
+        <button onclick="start()">🔴 ورود به پخش زنده</button>
     </div>
 
-    <div id="header"><h3 style="margin:0;">تلویزیون آنلاین عطاالله</h3></div>
+    <div id="header"><h3>در حال پخش: سریال مسافران</h3></div>
 
-    <div class="video-box">
-        <video id="tv" controls playsinline></video>
-        <div id="status-bar"><span id="info" class="tag">در حال دریافت سیگنال...</span></div>
-    </div>
+    <video id="tv" controls playsinline></video>
+    <div id="info" style="padding: 20px; color: #f1c40f;">در حال دریافت سیگنال...</div>
 
     <script>
         const player = document.getElementById('tv');
-        const info = document.getElementById('info');
         
-        // تنظیمات پخش
-        const epDuration = 2100; // زمان هر قسمت: ۳۵ دقیقه (۳۵ * ۶۰ ثانیه)
-        const totalEpisodes = 70;
-        const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
+        // لینک‌های مستقیم و دائمی از آرشیو جهانی (بدون فیلتر و مسدودی)
+        const playlist = [
+            { id: "1", url: "https://archive.org/download/mosaferan-01/Mosaferan-01.mp4", title: "مسافران - قسمت ۱" },
+            { id: "2", url: "https://archive.org/download/mosaferan-01/Mosaferan-02.mp4", title: "مسافران - قسمت ۲" }
+        ];
 
-        function getStream() {
-            const now = Math.floor(Date.now() / 1000);
-            const totalCycle = totalEpisodes * epDuration;
-            const elapsed = (now - epochStart) % totalCycle;
-            
-            const epIndex = Math.floor(elapsed / epDuration) + 1;
-            const seekTime = elapsed % epDuration;
-            
-            // لینک‌های امن HTTPS از سرور مستقیم
-            const epNum = epIndex < 10 ? '0' + epIndex : epIndex;
-            const videoUrl = `https://dl3.pishro-movie.com/Serial/Mosaferan/LQ/Mosaferan%20E${epNum}%20(LQ).mp4`;
-            
-            return { url: videoUrl, seek: seekTime, title: "مسافران - قسمت " + epIndex };
-        }
+        const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
+        const duration = 2100; // 35 دقیقه
 
         function sync() {
-            const stream = getStream();
-            if (player.getAttribute('data-active') !== stream.url) {
-                player.src = stream.url;
-                player.currentTime = stream.seek;
-                player.setAttribute('data-active', stream.url);
-                info.innerText = "در حال پخش: " + stream.title;
-            }
-            
-            // اگر اختلاف زمانی پلیر با زمان واقعی زیاد شد، اصلاحش کن
-            if (Math.abs(player.currentTime - stream.seek) > 10) {
-                player.currentTime = stream.seek;
+            const now = Math.floor(Date.now() / 1000);
+            const elapsed = (now - epochStart) % (playlist.length * duration);
+            const index = Math.floor(elapsed / duration);
+            const seek = elapsed % duration;
+
+            if (player.getAttribute('data-idx') != index) {
+                player.src = playlist[index].url;
+                player.setAttribute('data-idx', index);
+                player.currentTime = seek;
+                document.getElementById('info').innerText = "در حال پخش: " + playlist[index].title;
             }
         }
 
-        function launch() {
+        function start() {
             document.getElementById('overlay').style.display = 'none';
             sync();
             player.play();
-            setInterval(sync, 10000); // هماهنگی هر ۱۰ ثانیه
+            setInterval(sync, 15000);
         }
-
-        player.onerror = () => {
-            info.innerText = "خطا در اتصال به منبع. در حال تلاش مجدد...";
-            setTimeout(sync, 5000);
-        };
     </script>
 </body>
 </html>

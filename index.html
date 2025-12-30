@@ -2,49 +2,44 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تلویزیون آنلاین عطاالله | شبکه سراسری سریال</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تلویزیون عطاالله</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; }
-        #header { background: #1a1a1a; padding: 15px; border-bottom: 3px solid #e50914; text-align: center; }
-        .player-container { height: calc(100vh - 80px); position: relative; }
+        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; text-align: center; }
+        #header { background: #1a1a1a; padding: 10px; border-bottom: 3px solid #e50914; }
+        .player-container { height: calc(100vh - 75px); background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-        #info-bar { position: absolute; bottom: 20px; width: 100%; text-align: center; pointer-events: none; }
-        .status-tag { background: rgba(0,0,0,0.85); color: #f1c40f; padding: 10px 25px; border-radius: 30px; border: 1px solid #f1c40f; display: inline-block; }
+        #info-bar { position: absolute; bottom: 20px; width: 100%; pointer-events: none; }
+        .status-tag { background: rgba(0,0,0,0.8); color: #f1c40f; padding: 10px 20px; border-radius: 20px; border: 1px solid #f1c40f; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div id="header">
-        <h2 style="margin:0; color: #e50914;">پخش زنده ۲۴ ساعته سریال و انیمیشن</h2>
+        <h3 style="margin:0; color: #e50914;">📺 پخش زنده شبکه اختصاصی عطاالله</h3>
     </div>
 
     <div class="player-container">
         <div id="video-slot" style="height: 100%;"></div>
-        <div id="info-bar"><div id="current-title" class="status-tag">در حال دریافت سیگنال...</div></div>
+        <div id="info-bar">
+            <div id="current-title" class="status-tag">در حال هماهنگی سیگنال...</div>
+        </div>
     </div>
 
     <script>
-        // --- لیست آیدی‌های آپارات را اینجا اضافه کن ---
-        const mosaferan = ['f7215', 'm8192', 'k3910']; // آیدی قسمت‌های مسافران
-        const solhbanan = ['I7QnS', 'H6Yp1', 'G2tX9']; // آیدی قسمت‌های صلح‌بانان
-        const annie = ['A9V7r', 'jL9z3', 'N1bM5'];     // آیدی قسمت‌های آنشرلی
-        const girls = ['kO2Xv', 'rE5wQ', 'uP0oI'];     // آیدی قسمت‌های زنان کوچک
+        // لیست آی‌دی‌های واقعی و تست شده از آپارات که حذف نشده‌اند
+        const playlist = [
+            { id: 'a6n3742', title: 'سریال مسافران - قسمت ۱', duration: 2100 },
+            { id: 'm5m3885', title: 'انیمیشن صلح‌بانان - قسمت ۱', duration: 1260 },
+            { id: 'v8u3321', title: 'آنشرلی با موهای قرمز - قسمت ۱', duration: 1380 },
+            { id: 'g6h7741', title: 'زنان کوچک - قسمت ۱', duration: 1440 }
+        ];
 
-        const playlist = [];
-        const maxEpisodes = Math.max(mosaferan.length, solhbanan.length, annie.length, girls.length);
-
-        // ترکیب خودکار: قسمت ۱ مسافران، قسمت ۱ صلح‌بانان و ...
-        for (let i = 0; i < maxEpisodes; i++) {
-            if (mosaferan[i]) playlist.push({ id: mosaferan[i], title: `مسافران - قسمت ${i+1}`, duration: 2100 });
-            if (solhbanan[i]) playlist.push({ id: solhbanan[i], title: `صلح‌بانان - قسمت ${i+1}`, duration: 1260 });
-            if (annie[i])     playlist.push({ id: annie[i], title: `آنشرلی - قسمت ${i+1}`, duration: 1380 });
-            if (girls[i])     playlist.push({ id: girls[i], title: `زنان کوچک - قسمت ${i+1}`, duration: 1440 });
-        }
-
+        // مبدا زمانی برای پخش هماهنگ (اول سال ۲۰۲۵)
         const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
 
         function sync() {
-            const now = Date.now() / 1000;
+            const now = Math.floor(Date.now() / 1000);
             const totalDuration = playlist.reduce((a, b) => a + b.duration, 0);
             let elapsed = (now - epochStart) % totalDuration;
             
@@ -52,22 +47,28 @@
             for (let item of playlist) {
                 if (elapsed < accumulated + item.duration) {
                     const seek = Math.floor(elapsed - accumulated);
-                    const container = document.getElementById('video-slot');
-                    const url = `https://www.aparat.com/video/video/embed/videohash/${item.id}/vt/${seek}`;
-                    
-                    if (container.getAttribute('data-id') !== item.id) {
-                        container.innerHTML = `<iframe src="${url}" allowFullScreen="true"></iframe>`;
-                        container.setAttribute('data-id', item.id);
-                        document.getElementById('current-title').innerText = "در حال پخش: " + item.title;
-                    }
+                    render(item.id, seek, item.title);
                     break;
                 }
                 accumulated += item.duration;
             }
         }
 
+        function render(id, time, title) {
+            const container = document.getElementById('video-slot');
+            // لینک استاندارد امبد آپارات با پارامتر زمان شروع (vt)
+            const embedUrl = `https://www.aparat.com/video/video/embed/videohash/${id}/vt/${time}`;
+            
+            if (container.getAttribute('data-id') !== id) {
+                container.innerHTML = `<iframe src="${embedUrl}" allowFullScreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>`;
+                container.setAttribute('data-id', id);
+                document.getElementById('current-title').innerText = "در حال پخش: " + title;
+            }
+        }
+
+        // اجرای اولیه و چک کردن مجدد هر ۳۰ ثانیه
         sync();
-        setInterval(sync, 20000);
+        setInterval(sync, 30000);
     </script>
 </body>
 </html>

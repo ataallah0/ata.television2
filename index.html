@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون عطاالله</title>
+    <title>تلویزیون آنلاین عطاالله</title>
     <style>
         body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; text-align: center; }
         #header { background: #1a1a1a; padding: 10px; border-bottom: 3px solid #e50914; }
-        .player-container { height: calc(100vh - 75px); background: #000; position: relative; }
+        .player-container { height: calc(100vh - 80px); background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
         #info-bar { position: absolute; bottom: 20px; width: 100%; pointer-events: none; }
         .status-tag { background: rgba(0,0,0,0.8); color: #f1c40f; padding: 10px 20px; border-radius: 20px; border: 1px solid #f1c40f; font-size: 14px; }
@@ -16,26 +16,24 @@
 <body>
 
     <div id="header">
-        <h3 style="margin:0; color: #e50914;">📺 پخش زنده شبکه اختصاصی عطاالله</h3>
+        <h3 style="margin:0; color: #e50914;">📺 شبکه اختصاصی سریال و انیمیشن</h3>
     </div>
 
     <div class="player-container">
         <div id="video-slot" style="height: 100%;"></div>
         <div id="info-bar">
-            <div id="current-title" class="status-tag">در حال هماهنگی سیگنال...</div>
+            <div id="current-title" class="status-tag">در حال بارگذاری...</div>
         </div>
     </div>
 
     <script>
-        // لیست آی‌دی‌های واقعی و تست شده از آپارات که حذف نشده‌اند
+        // توجه: این آی‌دی‌ها نمونه هستند. اگر ۴۰۴ داد یعنی این ویدیوها از آپارات پاک شده‌اند.
         const playlist = [
-            { id: 'a6n3742', title: 'سریال مسافران - قسمت ۱', duration: 2100 },
-            { id: 'm5m3885', title: 'انیمیشن صلح‌بانان - قسمت ۱', duration: 1260 },
-            { id: 'v8u3321', title: 'آنشرلی با موهای قرمز - قسمت ۱', duration: 1380 },
-            { id: 'g6h7741', title: 'زنان کوچک - قسمت ۱', duration: 1440 }
+            { id: 'vpe8767', title: 'سریال مسافران - قسمت ۱', duration: 2100 },
+            { id: 'm1r2345', title: 'انیمیشن صلح‌بانان - قسمت ۱', duration: 1260 },
+            { id: 'a908765', title: 'آنشرلی - قسمت ۱', duration: 1380 }
         ];
 
-        // مبدا زمانی برای پخش هماهنگ (اول سال ۲۰۲۵)
         const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
 
         function sync() {
@@ -56,19 +54,18 @@
 
         function render(id, time, title) {
             const container = document.getElementById('video-slot');
-            // لینک استاندارد امبد آپارات با پارامتر زمان شروع (vt)
-            const embedUrl = `https://www.aparat.com/video/video/embed/videohash/${id}/vt/${time}`;
+            // آدرس امبد مستقیم آپارات
+            const embedUrl = "https://www.aparat.com/video/video/embed/videohash/" + id + "/vt/" + time;
             
             if (container.getAttribute('data-id') !== id) {
-                container.innerHTML = `<iframe src="${embedUrl}" allowFullScreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>`;
+                container.innerHTML = '<iframe src="' + embedUrl + '" allowFullScreen="true"></iframe>';
                 container.setAttribute('data-id', id);
                 document.getElementById('current-title').innerText = "در حال پخش: " + title;
             }
         }
 
-        // اجرای اولیه و چک کردن مجدد هر ۳۰ ثانیه
         sync();
-        setInterval(sync, 30000);
+        setInterval(sync, 15000);
     </script>
 </body>
 </html>

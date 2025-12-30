@@ -1,127 +1,73 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون آنلاین عطاالله</title>
+    <title>تلویزیون آنلاین عطاالله | شبکه سراسری سریال</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: Tahoma, sans-serif; overflow: hidden; text-align: center; }
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-        }
-        .play-btn {
-            padding: 20px 50px; background: #27ae60; color: #fff;
-            border: none; border-radius: 50px; font-size: 24px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
-        .play-btn:hover { background: #2ecc71; transform: scale(1.1); }
-        #player-container { width: 100vw; height: 100vh; background: #000; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        #info { position: absolute; bottom: 30px; width: 100%; text-shadow: 2px 2px 4px #000; color: #f1c40f; font-size: 18px; z-index: 10; }
-        .error-msg { color: #ff4d4d; font-size: 14px; margin-top: 10px; display: none; }
+        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; }
+        #header { background: #1a1a1a; padding: 15px; border-bottom: 3px solid #e50914; text-align: center; }
+        .player-container { height: calc(100vh - 80px); position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        #info-bar { position: absolute; bottom: 20px; width: 100%; text-align: center; pointer-events: none; }
+        .status-tag { background: rgba(0,0,0,0.85); color: #f1c40f; padding: 10px 25px; border-radius: 30px; border: 1px solid #f1c40f; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1 style="margin-bottom: 20px;">شبکه تلویزیونی پخش زنده</h1>
-        <button class="play-btn" onclick="startBroadcast()">🔴 تماشا کنید</button>
-        <p style="color: #aaa;">اگر پخش نشد، فیلترشکن خود را روشن یا خاموش کنید</p>
-        <div id="error-text" class="error-msg">خطا در بارگذاری منبع ویدیو</div>
+    <div id="header">
+        <h2 style="margin:0; color: #e50914;">پخش زنده ۲۴ ساعته سریال و انیمیشن</h2>
     </div>
 
-    <div id="player-container">
-        <video id="tvPlayer" playsinline controls preload="auto" muted></video>
+    <div class="player-container">
+        <div id="video-slot" style="height: 100%;"></div>
+        <div id="info-bar"><div id="current-title" class="status-tag">در حال دریافت سیگنال...</div></div>
     </div>
-
-    <div id="info">در حال هماهنگی با فرستنده...</div>
 
     <script>
+        // --- لیست آیدی‌های آپارات را اینجا اضافه کن ---
+        const mosaferan = ['f7215', 'm8192', 'k3910']; // آیدی قسمت‌های مسافران
+        const solhbanan = ['I7QnS', 'H6Yp1', 'G2tX9']; // آیدی قسمت‌های صلح‌بانان
+        const annie = ['A9V7r', 'jL9z3', 'N1bM5'];     // آیدی قسمت‌های آنشرلی
+        const girls = ['kO2Xv', 'rE5wQ', 'uP0oI'];     // آیدی قسمت‌های زنان کوچک
+
         const playlist = [];
-        
-        // تولید لیست پخش (فقط لینک‌های MP4 برای اطمینان از پخش در تمام مرورگرها)
-        for (let i = 1; i <= 50; i++) {
-            let num = i < 10 ? '0' + i : i;
+        const maxEpisodes = Math.max(mosaferan.length, solhbanan.length, annie.length, girls.length);
 
-            // انیمیشن صلح‌بانان (فرمت MP4 - سازگارترین حالت)
-            playlist.push({ 
-                url: `https://s1.irdanlod.ir/Animation/Series/Solhbanan/Solhbanan%20E${num}%20(Doostiha.Net).mp4`, 
-                duration: 1320, title: `انیمیشن صلح‌بانان - قسمت ${i}` 
-            });
-
-            // آنشرلی (فرمت MP4)
-            playlist.push({ 
-                url: `https://s1.irdanlod.ir/Animation/Series/Anne.of.Green.Gables/Anne.of.Green.Gables.E${num}.Dubbed%20(Doostiha.Net).mp4`, 
-                duration: 1440, title: `آنشرلی با موهای قرمز - قسمت ${i}` 
-            });
-            
-            // زنان کوچک (فرمت MP4)
-            playlist.push({ 
-                url: `https://s3.irdanlod.ir/Animation/Series/Little.Women/Little.Women.E${num}.Dubbed%20(Doostiha.Net).mp4`, 
-                duration: 1440, title: `زنان کوچک - قسمت ${i}` 
-            });
+        // ترکیب خودکار: قسمت ۱ مسافران، قسمت ۱ صلح‌بانان و ...
+        for (let i = 0; i < maxEpisodes; i++) {
+            if (mosaferan[i]) playlist.push({ id: mosaferan[i], title: `مسافران - قسمت ${i+1}`, duration: 2100 });
+            if (solhbanan[i]) playlist.push({ id: solhbanan[i], title: `صلح‌بانان - قسمت ${i+1}`, duration: 1260 });
+            if (annie[i])     playlist.push({ id: annie[i], title: `آنشرلی - قسمت ${i+1}`, duration: 1380 });
+            if (girls[i])     playlist.push({ id: girls[i], title: `زنان کوچک - قسمت ${i+1}`, duration: 1440 });
         }
 
-        const epochStart = new Date('2024-01-01T00:00:00').getTime() / 1000;
-        const player = document.getElementById('tvPlayer');
-        const info = document.getElementById('info');
+        const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
 
-        function syncTV() {
+        function sync() {
             const now = Date.now() / 1000;
             const totalDuration = playlist.reduce((a, b) => a + b.duration, 0);
             let elapsed = (now - epochStart) % totalDuration;
-
+            
             let accumulated = 0;
             for (let item of playlist) {
                 if (elapsed < accumulated + item.duration) {
-                    const seekTime = elapsed - accumulated;
-                    if (player.src !== item.url) {
-                        player.src = item.url;
-                        player.load();
-                    }
+                    const seek = Math.floor(elapsed - accumulated);
+                    const container = document.getElementById('video-slot');
+                    const url = `https://www.aparat.com/video/video/embed/videohash/${item.id}/vt/${seek}`;
                     
-                    // هماهنگی زمان
-                    if (Math.abs(player.currentTime - seekTime) > 8) {
-                        player.currentTime = seekTime;
+                    if (container.getAttribute('data-id') !== item.id) {
+                        container.innerHTML = `<iframe src="${url}" allowFullScreen="true"></iframe>`;
+                        container.setAttribute('data-id', item.id);
+                        document.getElementById('current-title').innerText = "در حال پخش: " + item.title;
                     }
-                    
-                    info.innerText = "در حال پخش: " + item.title;
                     break;
                 }
                 accumulated += item.duration;
             }
         }
 
-        function startBroadcast() {
-            document.getElementById('start-screen').style.display = 'none';
-            syncTV();
-            
-            // ابتدا بی صدا پخش میکنیم تا مرورگر اجازه دهد
-            player.muted = true; 
-            let playPromise = player.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    // پخش شروع شد، حالا بی صدا را بردارید (اگر کاربر اجازه دهد)
-                    player.muted = false;
-                }).catch(error => {
-                    console.log("پخش خودکار مسدود شد، نیاز به کلیک دوباره");
-                    player.play(); // تلاش مجدد
-                });
-            }
-            
-            setInterval(syncTV, 20000);
-        }
-
-        player.onerror = function() {
-            document.getElementById('error-text').style.display = 'block';
-            console.log("خطا در آدرس ویدیو یا عدم پشتیبانی مرورگر");
-        };
-
-        player.onended = function() { syncTV(); player.play(); };
+        sync();
+        setInterval(sync, 20000);
     </script>
 </body>
 </html>

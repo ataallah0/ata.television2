@@ -3,63 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون مسافران | عطاالله</title>
+    <title>تلویزیون سریال‌های کلاسیک</title>
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: Tahoma; overflow: hidden; text-align: center; }
-        #header { background: #1a1a1a; padding: 10px; border-bottom: 3px solid #e50914; }
-        .player-container { height: calc(100vh - 70px); background: #000; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; }
-        #info-bar { position: absolute; bottom: 25px; width: 100%; pointer-events: none; }
-        .tag { background: rgba(0,0,0,0.85); color: #f1c40f; padding: 10px 25px; border-radius: 30px; border: 1px solid #f1c40f; font-size: 14px; }
+        body { background: #121212; color: white; font-family: Tahoma, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        .tv-container { width: 95%; max-width: 850px; margin-top: 20px; border: 8px solid #333; border-radius: 15px; background: #000; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
+        .screen { position: relative; padding-bottom: 56.25%; height: 0; }
+        .screen iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .info { background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #333; }
+        h1 { font-size: 20px; color: #f1c40f; margin: 10px 0; }
+        .btn { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background: #2ecc71; transform: scale(1.05); }
+        .badge { background: #e74c3c; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <div id="header">
-        <h3 style="margin:0; color: #e50914;">📺 شبکه اختصاصی مسافران</h3>
-    </div>
+    <h1>📺 کانال پخش ۲۴ ساعته سریال</h1>
 
-    <div class="player-container">
-        <div id="video-slot" style="height: 100%;"></div>
-        <div id="info-bar">
-            <div id="current-title" class="tag">در حال هماهنگی با فرستنده...</div>
+    <div class="tv-container">
+        <div class="screen">
+            <iframe id="video-frame" src="" allowfullscreen="true" allow="autoplay"></iframe>
+        </div>
+        <div class="info">
+            <div>
+                <span class="badge" id="series-name">در حال بارگذاری...</span>
+                <p id="ep-title" style="margin: 5px 0 0 0; font-size: 14px;">قسمت ...</p>
+            </div>
+            <button class="btn" onclick="nextVideo()">قسمت بعدی ⏭️</button>
         </div>
     </div>
 
     <script>
-        // آیدی‌های استخراج شده از نماشا
-        const playlist = [
-            { id: 'O73Y7HwV', title: 'مسافران - قسمت ۱' },
-            { id: 'p0iX6uL8', title: 'مسافران - قسمت ۲' },
-            { id: 'kKLkFysT', title: 'مسافران - قسمت ۳۷' },
-            { id: 'm9V2b6rX', title: 'مسافران - قسمت ۴' }
+        // لیست قسمت‌ها - من برای هر سریال شروع را گذاشته‌ام
+        // شما می‌توانید به راحتی قسمت‌های 3، 4 و غیره را به همین ترتیب اضافه کنید
+        const tvPlaylist = [
+            // سریال مسافران
+            { title: "مسافران", ep: "قسمت 1", url: "https://www.namasha.com/embed/mlNwASkS" },
+            { title: "مسافران", ep: "قسمت 2", url: "https://www.namasha.com/embed/S26XhW7T" },
+            
+            // سریال صلح‌بانان
+            { title: "صلح‌بانان", ep: "قسمت 1", url: "https://www.namasha.com/embed/O8M7m9H6" },
+            { title: "صلح‌بانان", ep: "قسمت 2", url: "https://www.namasha.com/embed/S90m7j5K" }, // لینک نمونه
+
+            // سریال زنان کوچک
+            { title: "زنان کوچک", ep: "قسمت 1", url: "https://www.namasha.com/embed/h32eZl1d" },
+            { title: "زنان کوچک", ep: "قسمت 2", url: "https://www.namasha.com/embed/oK27J6mB" },
+
+            // سریال لحظه گرگ و میش
+            { title: "لحظه گرگ و میش", ep: "قسمت 1", url: "https://www.namasha.com/embed/7200788691" },
+            { title: "لحظه گرگ و میش", ep: "قسمت 2", url: "https://www.namasha.com/embed/8100922345" } // لینک نمونه
         ];
 
-        const epochStart = new Date('2025-01-01T00:00:00').getTime() / 1000;
-        const duration = 2100; // هر قسمت ۳۵ دقیقه
+        let currentIdx = 0;
 
-        function sync() {
-            const now = Math.floor(Date.now() / 1000);
-            const totalCycle = playlist.length * duration;
-            const elapsed = (now - epochStart) % totalCycle;
+        function playChannel(index) {
+            if (index >= tvPlaylist.length) index = 0;
+            currentIdx = index;
             
-            const index = Math.floor(elapsed / duration);
-            const currentItem = playlist[index];
+            const video = tvPlaylist[index];
+            document.getElementById('video-frame').src = video.url;
+            document.getElementById('series-name').innerText = video.title;
+            document.getElementById('ep-title').innerText = video.ep;
             
-            const container = document.getElementById('video-slot');
-            // نماشا فعلاً پارامتر زمان شروع (vt) را مثل آپارات ندارد، 
-            // پس ویدیو از اول قسمت پخش می‌شود تا هماهنگ بماند.
-            const embedUrl = `https://www.namasha.com/embed/${currentItem.id}`;
-            
-            if (container.getAttribute('data-id') !== currentItem.id) {
-                container.innerHTML = `<iframe src="${embedUrl}" allowFullScreen="true"></iframe>`;
-                container.setAttribute('data-id', currentItem.id);
-                document.getElementById('current-title').innerText = "در حال پخش: " + currentItem.title;
-            }
+            // ذخیره در حافظه برای مراجعات بعدی
+            localStorage.setItem('tv_index', index);
         }
 
-        sync();
-        setInterval(sync, 30000); // چک کردن هر ۳۰ ثانیه
+        function nextVideo() {
+            currentIdx++;
+            playChannel(currentIdx);
+        }
+
+        // اجرای خودکار هنگام باز شدن سایت
+        window.onload = () => {
+            const lastPos = localStorage.getItem('tv_index');
+            playChannel(lastPos ? parseInt(lastPos) : 0);
+        };
     </script>
 </body>
 </html>

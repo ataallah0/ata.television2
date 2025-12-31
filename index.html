@@ -2,66 +2,83 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تلویزیون اختصاصی سریال‌های نوستالژیک</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پخش کامل سریال مسافران - ۷۰ قسمت</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: Tahoma; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .tv-frame { width: 90%; max-width: 950px; aspect-ratio: 16 / 9; background: #000; border: 8px solid #2c3e50; border-radius: 15px; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.9); }
-        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .controls { margin-top: 15px; background: #1a1a1a; padding: 15px 25px; border-radius: 12px; display: flex; align-items: center; gap: 20px; border: 1px solid #333; }
-        .info-text { min-width: 200px; }
-        .series-name { color: #f1c40f; font-weight: bold; font-size: 18px; display: block; }
-        .episode-name { color: #bdc3c7; font-size: 14px; }
-        button { background: #c0392b; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #e74c3c; transform: scale(1.05); }
+        * { box-sizing: border-box; }
+        body { background-color: #0d0d0d; color: #eee; font-family: Tahoma, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #1a1a1a; padding: 12px; text-align: center; border-bottom: 3px solid #ff3e3e; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        
+        /* لیست سمت راست با قابلیت اسکرول */
+        .playlist-section { flex: 1; background: #151515; overflow-y: scroll; border-left: 1px solid #333; padding: 10px; }
+        .series-label { background: #ff3e3e; color: white; padding: 8px; font-size: 14px; border-radius: 4px; margin-bottom: 10px; text-align: center; position: sticky; top: 0; }
+        .episode-link { display: block; background: #222; color: #ccc; padding: 10px; margin-bottom: 5px; text-decoration: none; border-radius: 5px; font-size: 12px; transition: 0.2s; }
+        .episode-link:hover { background: #333; color: #fff; }
+        .episode-link.active { background: #444; border-right: 4px solid #ff3e3e; color: #ff3e3e; }
+
+        /* بخش پلیر */
+        .video-section { flex: 3; background: #000; position: relative; }
+        video { width: 100%; height: 100%; outline: none; }
+        
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .playlist-section { height: 200px; flex: none; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="tv-frame">
-        <iframe id="tv-player" src="" allowfullscreen></iframe>
+<header>
+    <h2 style="margin:0; font-size: 16px;">📺 آرشیو کامل سریال مسافران (۷۰ قسمت)</h2>
+</header>
+
+<div class="main-container">
+    <div class="playlist-section" id="playlist">
+        <div class="series-label">انتخاب قسمت (۱ تا ۷۰)</div>
+        <div id="links-container"></div>
     </div>
 
-    <div class="controls">
-        <div class="info-text">
-            <span id="display-series" class="series-name">در حال لود...</span>
-            <span id="display-episode" class="episode-name">شبکه اختصاصی</span>
-        </div>
-        <button onclick="nextEpisode()">قسمت بعدی ⏭️</button>
+    <div class="video-section">
+        <video id="main-player" controls>
+            <source id="video-source" src="https://dl.porefilm.com/Series/Mosaferan/480/Mosaferan.E01.480p.PoreFilm.mp4" type="video/mp4">
+        </video>
     </div>
+</div>
 
-    <script>
-        const playlist = [
-            // سریال مسافران (تست شده)
-            { name: "سریال مسافران", ep: "قسمت 1", url: "https://www.namasha.com/embed/mlNwASkS" },
-            { name: "سریال مسافران", ep: "قسمت 2", url: "https://www.namasha.com/embed/S26XhW7T" },
-            { name: "سریال مسافران", ep: "قسمت 3", url: "https://www.namasha.com/embed/K8N3m1P9" },
+<script>
+    const container = document.getElementById('links-container');
+    const totalEpisodes = 70;
 
-            // انیمیشن زنان کوچک (تست شده)
-            { name: "انیمیشن زنان کوچک", ep: "قسمت 1", url: "https://www.namasha.com/embed/T6yS2v4k" },
-            { name: "انیمیشن زنان کوچک", ep: "قسمت 2", url: "https://www.namasha.com/embed/v/m6Dsh6Pz" },
+    // ایجاد خودکار لینک برای ۷۰ قسمت
+    for (let i = 1; i <= totalEpisodes; i++) {
+        const epNumber = i < 10 ? '0' + i : i; // تبدیل ۱ به ۰۱ برای لینک درست
+        const url = `https://dl.porefilm.com/Series/Mosaferan/480/Mosaferan.E${epNumber}.480p.PoreFilm.mp4`;
+        
+        const a = document.createElement('a');
+        a.href = "#";
+        a.className = 'episode-link' + (i === 1 ? ' active' : '');
+        a.innerText = 'مسافران - قسمت ' + i;
+        a.onclick = function(e) {
+            e.preventDefault();
+            changeVideo(url, i, this);
+        };
+        container.appendChild(a);
+    }
 
-            // سریال صلح‌بانان
-            { name: "صلح‌بانان", ep: "قسمت 1", url: "https://www.namasha.com/embed/O8M7m9H6" },
-            { name: "صلح‌بانان", ep: "قسمت 2", url: "https://www.namasha.com/embed/v/S90m7j5K" }
-        ];
+    function changeVideo(url, num, el) {
+        const player = document.getElementById('main-player');
+        const source = document.getElementById('video-source');
+        
+        source.src = url;
+        player.load();
+        player.play();
+        
+        const links = document.querySelectorAll('.episode-link');
+        links.forEach(l => l.classList.remove('active'));
+        el.classList.add('active');
+    }
+</script>
 
-        let currentPos = parseInt(localStorage.getItem('tv_pos')) || 0;
-
-        function startTV() {
-            const currentVideo = playlist[currentPos];
-            document.getElementById('tv-player').src = currentVideo.url;
-            document.getElementById('display-series').innerText = currentVideo.name;
-            document.getElementById('display-episode').innerText = currentVideo.ep;
-            localStorage.setItem('tv_pos', currentPos);
-        }
-
-        function nextEpisode() {
-            currentPos++;
-            if (currentPos >= playlist.length) currentPos = 0; // برگشت به اول لیست
-            startTV();
-        }
-
-        window.onload = startTV;
-    </script>
 </body>
 </html>

@@ -1,110 +1,104 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون من</title>
+    <title>تلویزیون آنلاین عطاالله</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* قاب تلویزیون تمام صفحه */
-        .tv-screen {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            border: none;
+        body { background: #000; color: #fff; margin: 0; font-family: Tahoma, sans-serif; overflow: hidden; text-align: center; }
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
         }
-
-        /* دکمه کنترل مخفی که پایین صفحه است */
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            opacity: 0.3; /* کمرنگ است تا مزاحم فیلم نباشد */
-            transition: 0.5s;
+        .play-btn {
+            padding: 20px 50px; background: #e50914; color: #fff;
+            border: none; border-radius: 50px; font-size: 24px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
         }
-        .controls:hover { opacity: 1; }
-
-        button {
-            background: #d32f2f;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-family: Tahoma;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        /* نمایشگر شماره قسمت */
-        .info-badge {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: Tahoma;
-            font-size: 12px;
-            pointer-events: none;
-        }
+        .play-btn:hover { background: #ff0a16; transform: scale(1.1); }
+        #player-container { width: 100vw; height: 100vh; }
+        video { width: 100%; height: 100%; background: #000; }
+        #info { position: absolute; bottom: 20px; width: 100%; text-shadow: 2px 2px 4px #000; color: #ccc; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="info-badge" id="info">در حال بارگذاری...</div>
-
-    <iframe id="player" class="tv-screen" src="" allowfullscreen allow="autoplay"></iframe>
-
-    <div class="controls">
-        <button onclick="nextEpisode()">قسمت بعدی >></button>
+    <div id="start-screen">
+        <h1 style="margin-bottom: 30px;">به شبکه تلویزیونی عطاالله خوش آمدید</h1>
+        <button class="play-btn" onclick="startBroadcast()">🔴 ورود به پخش زنده</button>
+        <p style="color: #888; margin-top: 20px;">(برای هماهنگی صدا و تصویر کلیک کنید)</p>
     </div>
 
+    <div id="player-container">
+        <video id="tvPlayer" playsinline controls></video>
+    </div>
+
+    <div id="info">در حال بارگذاری...</div>
+
     <script>
-        // لیست واقعی قسمت‌های مسافران (تست شده)
-        // برای اضافه کردن قسمت جدید، فقط یک خط کپی کنید و ID نماشا را عوض کنید
-        const episodes = [
-            "mlNwASkS", // قسمت 1
-            "S26XhW7T", // قسمت 2
-            "K8N3m1P9", // قسمت 3
-            "hV9N7XpS", // قسمت 4
-            "m6Dsh6Pz", // قسمت 5
-            "O8M7m9H6", // قسمت 6
-            "pC7O3X2k", // قسمت 7
-            "T6yS2v4k", // قسمت 8
-            "v9M7n2K1", // قسمت 9 (مثال)
-            "L3b4N5m6"  // قسمت 10 (مثال)
+        // لیست اصلاح شده با رعایت تمام کاماها و پرانتزها
+        const playlist = [
+            { 
+                url: 'https://dl5.netpaak.ir/zangsel/Sirial-Irani/Mosafaran/Mosaferan.E01.720p.HDTV_Upko.ir.mp4', 
+                duration: 2400, 
+                title: 'مسافران' 
+            },
+            
+            { 
+                url: 'https://s3.irdanlod.ir/Animation/1999/T/Toy.Story.2.1999.720p.Farsi.Dubbed.mkv', 
+                duration: 5520, // ۹۲ دقیقه
+                title: 'داستان اسباب‌بازی ۲' 
+            }
         ];
 
-        // خواندن آخرین قسمتی که کاربر دیده از حافظه
-        let currentEpIndex = parseInt(localStorage.getItem('my_tv_last_ep')) || 0;
-        const player = document.getElementById('player');
+        const epochStart = new Date('2024-01-01T00:00:00').getTime() / 1000;
+        const player = document.getElementById('tvPlayer');
+        const startScreen = document.getElementById('start-screen');
         const info = document.getElementById('info');
 
-        function loadEp(index) {
-            if (index >= episodes.length) index = 0; // اگر تمام شد برگرد اول
-            
-            // ساخت لینک پخش
-            // پارامتر autoplay=1 باعث می‌شود ویدیو خودکار آماده پخش شود
-            player.src = "https://www.namasha.com/embed/" + episodes[index] + "?autoplay=1";
-            
-            info.innerText = "قسمت: " + (index + 1);
-            
-            // ذخیره در حافظه که کاربر کدام قسمت بوده
-            localStorage.setItem('my_tv_last_ep', index);
-            currentEpIndex = index;
+        function syncTV() {
+            const now = Date.now() / 1000;
+            const totalDuration = playlist.reduce((a, b) => a + b.duration, 0);
+            let elapsed = (now - epochStart) % totalDuration;
+
+            let accumulated = 0;
+            for (let movie of playlist) {
+                if (elapsed < accumulated + movie.duration) {
+                    const seekTime = elapsed - accumulated;
+                    
+                    if (player.src !== movie.url) {
+                        player.src = movie.url;
+                        player.load();
+                    }
+                    
+                    if (Math.abs(player.currentTime - seekTime) > 3) {
+                        player.currentTime = seekTime;
+                    }
+                    
+                    info.innerText = "در حال پخش: " + movie.title;
+                    break;
+                }
+                accumulated += movie.duration;
+            }
         }
 
-        function nextEpisode() {
-            loadEp(currentEpIndex + 1);
+        function startBroadcast() {
+            startScreen.style.display = 'none';
+            syncTV();
+            player.play().catch(error => {
+                console.error("خطا:", error);
+                player.muted = true;
+                player.play();
+            });
+
+            setInterval(syncTV, 10000);
         }
 
-        // شروع برنامه به محض باز شدن سایت
-        window.onload = function() {
-            loadEp(currentEpIndex);
+        // وقتی فیلم تمام شد بلافاصله فیلم بعدی را بیاورد
+        player.onended = function() {
+            syncTV();
+            player.play();
         };
     </script>
 </body>

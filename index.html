@@ -2,82 +2,95 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پخش کامل سریال مسافران - ۷۰ قسمت</title>
+    <title>تلویزیون آنلاین - سریال مسافران</title>
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #0d0d0d; color: #eee; font-family: Tahoma, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #1a1a1a; padding: 12px; text-align: center; border-bottom: 3px solid #ff3e3e; }
-        .main-container { display: flex; flex: 1; overflow: hidden; }
+        body { background: #0a0a0a; color: #fff; font-family: Tahoma; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: #1a1a1a; padding: 15px; text-align: center; border-bottom: 3px solid #e74c3c; font-size: 18px; font-weight: bold; }
+        .main { display: flex; flex: 1; overflow: hidden; }
         
-        /* لیست سمت راست با قابلیت اسکرول */
-        .playlist-section { flex: 1; background: #151515; overflow-y: scroll; border-left: 1px solid #333; padding: 10px; }
-        .series-label { background: #ff3e3e; color: white; padding: 8px; font-size: 14px; border-radius: 4px; margin-bottom: 10px; text-align: center; position: sticky; top: 0; }
-        .episode-link { display: block; background: #222; color: #ccc; padding: 10px; margin-bottom: 5px; text-decoration: none; border-radius: 5px; font-size: 12px; transition: 0.2s; }
-        .episode-link:hover { background: #333; color: #fff; }
-        .episode-link.active { background: #444; border-right: 4px solid #ff3e3e; color: #ff3e3e; }
+        /* لیست پخش سمت راست */
+        .playlist { width: 320px; background: #111; overflow-y: auto; border-left: 1px solid #333; padding: 10px; }
+        .ep-item { display: block; background: #222; color: #bbb; padding: 12px; margin-bottom: 8px; text-decoration: none; border-radius: 8px; font-size: 13px; transition: 0.3s; cursor: pointer; border-right: 4px solid transparent; }
+        .ep-item:hover { background: #333; color: #fff; }
+        .ep-item.active { background: #2c3e50; border-right: 4px solid #e74c3c; color: #fff; font-weight: bold; }
 
-        /* بخش پلیر */
-        .video-section { flex: 3; background: #000; position: relative; }
-        video { width: 100%; height: 100%; outline: none; }
+        /* بخش پلیر سمت چپ */
+        .video-container { flex: 1; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        video { width: 100%; max-height: 100%; outline: none; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
         @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            .playlist-section { height: 200px; flex: none; }
+            .main { flex-direction: column; }
+            .playlist { width: 100%; height: 250px; border-left: none; border-top: 1px solid #333; }
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h2 style="margin:0; font-size: 16px;">📺 آرشیو کامل سریال مسافران (۷۰ قسمت)</h2>
-</header>
+<header>📺 پخش کامل سریال مسافران (کیفیت اصلی)</header>
 
-<div class="main-container">
-    <div class="playlist-section" id="playlist">
-        <div class="series-label">انتخاب قسمت (۱ تا ۷۰)</div>
-        <div id="links-container"></div>
-    </div>
+<div class="main">
+    <div class="playlist" id="ep-list">
+        </div>
 
-    <div class="video-section">
-        <video id="main-player" controls>
-            <source id="video-source" src="https://dl.porefilm.com/Series/Mosaferan/480/Mosaferan.E01.480p.PoreFilm.mp4" type="video/mp4">
+    <div class="video-container">
+        <video id="tv-player" controls autoplay poster="https://upko.ir/wp-content/uploads/2023/06/Mosaferan.jpg">
+            <source id="video-source" src="" type="video/mp4">
+            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
         </video>
     </div>
 </div>
 
 <script>
-    const container = document.getElementById('links-container');
-    const totalEpisodes = 70;
+    const player = document.getElementById('tv-player');
+    const source = document.getElementById('video-source');
+    const listContainer = document.getElementById('ep-list');
 
-    // ایجاد خودکار لینک برای ۷۰ قسمت
-    for (let i = 1; i <= totalEpisodes; i++) {
-        const epNumber = i < 10 ? '0' + i : i; // تبدیل ۱ به ۰۱ برای لینک درست
-        const url = `https://dl.porefilm.com/Series/Mosaferan/480/Mosaferan.E${epNumber}.480p.PoreFilm.mp4`;
-        
-        const a = document.createElement('a');
-        a.href = "#";
-        a.className = 'episode-link' + (i === 1 ? ' active' : '');
-        a.innerText = 'مسافران - قسمت ' + i;
-        a.onclick = function(e) {
-            e.preventDefault();
-            changeVideo(url, i, this);
-        };
-        container.appendChild(a);
+    // تابع ساخت لینک‌ها بر اساس الگوی سایت آپکو
+    function createPlaylist() {
+        for (let i = 1; i <= 70; i++) {
+            const epNum = i < 10 ? '0' + i : i;
+            // لینک مستقیم کیفیت 480p از سرور آپکو
+            const url = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${epNum}.480p.Upko.mp4`;
+            
+            const item = document.createElement('div');
+            item.className = 'ep-item';
+            item.id = 'ep-' + i;
+            item.innerText = 'سریال مسافران - قسمت ' + i;
+            item.onclick = () => play(url, i);
+            listContainer.appendChild(item);
+        }
     }
 
-    function changeVideo(url, num, el) {
-        const player = document.getElementById('main-player');
-        const source = document.getElementById('video-source');
-        
+    function play(url, index) {
         source.src = url;
         player.load();
-        player.play();
+        player.play().catch(e => console.log("پخش خودکار مسدود شد، روی ویدیو کلیک کنید."));
         
-        const links = document.querySelectorAll('.episode-link');
-        links.forEach(l => l.classList.remove('active'));
-        el.classList.add('active');
+        // تغییر وضعیت دکمه‌ها
+        document.querySelectorAll('.ep-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('ep-' + index).classList.add('active');
+        
+        // ذخیره آخرین قسمت
+        localStorage.setItem('last_watched', index);
     }
+
+    // پخش خودکار قسمت بعدی وقتی این قسمت تمام شد
+    player.onended = function() {
+        let next = parseInt(localStorage.getItem('last_watched')) + 1;
+        if (next <= 70) {
+            const nextUrl = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${next < 10 ? '0' + next : next}.480p.Upko.mp4`;
+            play(nextUrl, next);
+        }
+    };
+
+    // اجرا در هنگام شروع سایت
+    window.onload = () => {
+        createPlaylist();
+        let last = parseInt(localStorage.getItem('last_watched')) || 1;
+        const lastUrl = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${last < 10 ? '0' + last : last}.480p.Upko.mp4`;
+        play(lastUrl, last);
+    };
 </script>
 
 </body>

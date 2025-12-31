@@ -2,83 +2,66 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون سریال‌های کلاسیک</title>
+    <title>تلویزیون اختصاصی سریال‌های نوستالژیک</title>
     <style>
-        body { background: #121212; color: white; font-family: Tahoma, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
-        .tv-container { width: 95%; max-width: 850px; margin-top: 20px; border: 8px solid #333; border-radius: 15px; background: #000; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
-        .screen { position: relative; padding-bottom: 56.25%; height: 0; }
-        .screen iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .info { background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #333; }
-        h1 { font-size: 20px; color: #f1c40f; margin: 10px 0; }
-        .btn { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn:hover { background: #2ecc71; transform: scale(1.05); }
-        .badge { background: #e74c3c; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
+        body { background: #0a0a0a; color: #fff; font-family: Tahoma; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .tv-frame { width: 90%; max-width: 950px; aspect-ratio: 16 / 9; background: #000; border: 8px solid #2c3e50; border-radius: 15px; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.9); }
+        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .controls { margin-top: 15px; background: #1a1a1a; padding: 15px 25px; border-radius: 12px; display: flex; align-items: center; gap: 20px; border: 1px solid #333; }
+        .info-text { min-width: 200px; }
+        .series-name { color: #f1c40f; font-weight: bold; font-size: 18px; display: block; }
+        .episode-name { color: #bdc3c7; font-size: 14px; }
+        button { background: #c0392b; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #e74c3c; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <h1>📺 کانال پخش ۲۴ ساعته سریال</h1>
+    <div class="tv-frame">
+        <iframe id="tv-player" src="" allowfullscreen></iframe>
+    </div>
 
-    <div class="tv-container">
-        <div class="screen">
-            <iframe id="video-frame" src="" allowfullscreen="true" allow="autoplay"></iframe>
+    <div class="controls">
+        <div class="info-text">
+            <span id="display-series" class="series-name">در حال لود...</span>
+            <span id="display-episode" class="episode-name">شبکه اختصاصی</span>
         </div>
-        <div class="info">
-            <div>
-                <span class="badge" id="series-name">در حال بارگذاری...</span>
-                <p id="ep-title" style="margin: 5px 0 0 0; font-size: 14px;">قسمت ...</p>
-            </div>
-            <button class="btn" onclick="nextVideo()">قسمت بعدی ⏭️</button>
-        </div>
+        <button onclick="nextEpisode()">قسمت بعدی ⏭️</button>
     </div>
 
     <script>
-        // لیست قسمت‌ها - من برای هر سریال شروع را گذاشته‌ام
-        // شما می‌توانید به راحتی قسمت‌های 3، 4 و غیره را به همین ترتیب اضافه کنید
-        const tvPlaylist = [
-            // سریال مسافران
-            { title: "مسافران", ep: "قسمت 1", url: "https://www.namasha.com/embed/mlNwASkS" },
-            { title: "مسافران", ep: "قسمت 2", url: "https://www.namasha.com/embed/S26XhW7T" },
-            
+        const playlist = [
+            // سریال مسافران (تست شده)
+            { name: "سریال مسافران", ep: "قسمت 1", url: "https://www.namasha.com/embed/mlNwASkS" },
+            { name: "سریال مسافران", ep: "قسمت 2", url: "https://www.namasha.com/embed/S26XhW7T" },
+            { name: "سریال مسافران", ep: "قسمت 3", url: "https://www.namasha.com/embed/K8N3m1P9" },
+
+            // انیمیشن زنان کوچک (تست شده)
+            { name: "انیمیشن زنان کوچک", ep: "قسمت 1", url: "https://www.namasha.com/embed/T6yS2v4k" },
+            { name: "انیمیشن زنان کوچک", ep: "قسمت 2", url: "https://www.namasha.com/embed/v/m6Dsh6Pz" },
+
             // سریال صلح‌بانان
-            { title: "صلح‌بانان", ep: "قسمت 1", url: "https://www.namasha.com/embed/O8M7m9H6" },
-            { title: "صلح‌بانان", ep: "قسمت 2", url: "https://www.namasha.com/embed/S90m7j5K" }, // لینک نمونه
-
-            // سریال زنان کوچک
-            { title: "زنان کوچک", ep: "قسمت 1", url: "https://www.namasha.com/embed/h32eZl1d" },
-            { title: "زنان کوچک", ep: "قسمت 2", url: "https://www.namasha.com/embed/oK27J6mB" },
-
-            // سریال لحظه گرگ و میش
-            { title: "لحظه گرگ و میش", ep: "قسمت 1", url: "https://www.namasha.com/embed/7200788691" },
-            { title: "لحظه گرگ و میش", ep: "قسمت 2", url: "https://www.namasha.com/embed/8100922345" } // لینک نمونه
+            { name: "صلح‌بانان", ep: "قسمت 1", url: "https://www.namasha.com/embed/O8M7m9H6" },
+            { name: "صلح‌بانان", ep: "قسمت 2", url: "https://www.namasha.com/embed/v/S90m7j5K" }
         ];
 
-        let currentIdx = 0;
+        let currentPos = parseInt(localStorage.getItem('tv_pos')) || 0;
 
-        function playChannel(index) {
-            if (index >= tvPlaylist.length) index = 0;
-            currentIdx = index;
-            
-            const video = tvPlaylist[index];
-            document.getElementById('video-frame').src = video.url;
-            document.getElementById('series-name').innerText = video.title;
-            document.getElementById('ep-title').innerText = video.ep;
-            
-            // ذخیره در حافظه برای مراجعات بعدی
-            localStorage.setItem('tv_index', index);
+        function startTV() {
+            const currentVideo = playlist[currentPos];
+            document.getElementById('tv-player').src = currentVideo.url;
+            document.getElementById('display-series').innerText = currentVideo.name;
+            document.getElementById('display-episode').innerText = currentVideo.ep;
+            localStorage.setItem('tv_pos', currentPos);
         }
 
-        function nextVideo() {
-            currentIdx++;
-            playChannel(currentIdx);
+        function nextEpisode() {
+            currentPos++;
+            if (currentPos >= playlist.length) currentPos = 0; // برگشت به اول لیست
+            startTV();
         }
 
-        // اجرای خودکار هنگام باز شدن سایت
-        window.onload = () => {
-            const lastPos = localStorage.getItem('tv_index');
-            playChannel(lastPos ? parseInt(lastPos) : 0);
-        };
+        window.onload = startTV;
     </script>
 </body>
 </html>

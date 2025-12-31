@@ -2,72 +2,74 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تلویزیون اختصاصی - مسافران</title>
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تلویزیون اختصاصی</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        #overlay { position: absolute; color: white; background: rgba(0,0,0,0.5); padding: 10px; top: 10px; right: 10px; font-family: Tahoma; border-radius: 5px; pointer-events: none; opacity: 0; transition: 0.5s; }
-        body:hover #overlay { opacity: 1; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+        /* نمایش شماره قسمت در گوشه تصویر */
+        #status { position: absolute; top: 20px; left: 20px; background: rgba(255,0,0,0.7); color: white; padding: 5px 15px; border-radius: 5px; font-family: Tahoma; font-size: 12px; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">در حال پخش: <span id="ep-name"></span></div>
+    <div id="status">در حال پخش: قسمت <span id="ep-num">1</span></div>
     
-    <video id="tv-engine" controls autoplay playsinline>
+    <video id="tv-player" controls autoplay playsinline>
         <source id="video-src" src="" type="video/mp4">
     </video>
 
     <script>
-        const video = document.getElementById('tv-engine');
+        const player = document.getElementById('tv-player');
         const source = document.getElementById('video-src');
-        const label = document.getElementById('ep-name');
+        const epLabel = document.getElementById('ep-num');
 
-        // تنظیمات تلویزیون
-        const TOTAL_EPISODES = 70;
-        
-        // ۱. خواندن وضعیت قبلی از حافظه مرورگر
-        let currentEp = parseInt(localStorage.getItem('tv_current_ep')) || 1;
-        let currentTime = parseFloat(localStorage.getItem('tv_current_time')) || 0;
+        const TOTAL_EP = 70;
 
-        function loadVideo(epNum, startTime) {
-            const formattedEp = epNum < 10 ? '0' + epNum : epNum;
-            // لینک مستقیم از سرور آپکو (تست شده)
-            const videoUrl = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${formattedEp}.480p.Upko.mp4`;
+        // ۱. بازیابی وضعیت قبلی از حافظه مرورگر
+        let currentEp = parseInt(localStorage.getItem('tv_ep')) || 1;
+        let currentTime = parseFloat(localStorage.getItem('tv_time')) || 0;
+
+        function startChannel(ep, time) {
+            const formattedEp = ep < 10 ? '0' + ep : ep;
+            // لینک مستقیم از سرور آپکو که با رفرر مخفی باز می‌شود
+            const url = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${formattedEp}.480p.Upko.mp4`;
             
-            source.src = videoUrl;
-            label.innerText = "قسمت " + epNum;
-            video.load();
-            video.currentTime = startTime;
+            source.src = url;
+            epLabel.innerText = ep;
+            player.load();
+            player.currentTime = time;
             
-            // تلاش برای پخش خودکار (برخی مرورگرها اجازه نمی‌دهند و باید یک کلیک شود)
-            video.play().catch(() => {
-                console.log("لطفاً برای شروع پخش یک بار روی صفحه کلیک کنید.");
+            // شروع پخش
+            player.play().catch(() => {
+                console.log("مرورگر اجازه پخش خودکار نداد. کاربر باید یک بار کلیک کند.");
             });
         }
 
-        // ۲. ذخیره لحظه‌ای وضعیت (هر ۵ ثانیه یکبار)
-        video.ontimeupdate = () => {
-            localStorage.setItem('tv_current_time', video.currentTime);
-            localStorage.setItem('tv_current_ep', currentEp);
-        };
-
-        // ۳. جادوی تلویزیون: وقتی قسمت تمام شد، برو بعدی
-        video.onended = () => {
-            if (currentEp < TOTAL_EPISODES) {
-                currentEp++;
-                currentTime = 0;
-                loadVideo(currentEp, 0);
-            } else {
-                currentEp = 1; // بازگشت به قسمت اول بعد از اتمام ۷۰ قسمت
-                loadVideo(1, 0);
+        // ۲. ذخیره مداوم ثانیه و قسمت
+        player.ontimeupdate = () => {
+            if (player.currentTime > 0) {
+                localStorage.setItem('tv_time', player.currentTime);
+                localStorage.setItem('tv_ep', currentEp);
             }
         };
 
-        // شروع به کار تلویزیون
-        window.onload = () => {
-            loadVideo(currentEp, currentTime);
+        // ۳. پخش خودکار قسمت بعدی (بدون دخالت کاربر)
+        player.onended = () => {
+            if (currentEp < TOTAL_EP) {
+                currentEp++;
+                localStorage.setItem('tv_ep', currentEp);
+                localStorage.setItem('tv_time', 0);
+                startChannel(currentEp, 0);
+            } else {
+                currentEp = 1; // شروع مجدد از قسمت اول
+                startChannel(1, 0);
+            }
         };
+
+        // لود اولیه تلویزیون
+        window.onload = () => startChannel(currentEp, currentTime);
     </script>
 </body>
 </html>

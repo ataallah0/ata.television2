@@ -1,75 +1,111 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
-    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلویزیون اختصاصی</title>
+    <title>تلویزیون من</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
-        /* نمایش شماره قسمت در گوشه تصویر */
-        #status { position: absolute; top: 20px; left: 20px; background: rgba(255,0,0,0.7); color: white; padding: 5px 15px; border-radius: 5px; font-family: Tahoma; font-size: 12px; z-index: 10; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* قاب تلویزیون تمام صفحه */
+        .tv-screen {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* دکمه کنترل مخفی که پایین صفحه است */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            opacity: 0.3; /* کمرنگ است تا مزاحم فیلم نباشد */
+            transition: 0.5s;
+        }
+        .controls:hover { opacity: 1; }
+
+        button {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-family: Tahoma;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* نمایشگر شماره قسمت */
+        .info-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: Tahoma;
+            font-size: 12px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="status">در حال پخش: قسمت <span id="ep-num">1</span></div>
-    
-    <video id="tv-player" controls autoplay playsinline>
-        <source id="video-src" src="" type="video/mp4">
-    </video>
+    <div class="info-badge" id="info">در حال بارگذاری...</div>
+
+    <iframe id="player" class="tv-screen" src="" allowfullscreen allow="autoplay"></iframe>
+
+    <div class="controls">
+        <button onclick="nextEpisode()">قسمت بعدی >></button>
+    </div>
 
     <script>
-        const player = document.getElementById('tv-player');
-        const source = document.getElementById('video-src');
-        const epLabel = document.getElementById('ep-num');
+        // لیست واقعی قسمت‌های مسافران (تست شده)
+        // برای اضافه کردن قسمت جدید، فقط یک خط کپی کنید و ID نماشا را عوض کنید
+        const episodes = [
+            "mlNwASkS", // قسمت 1
+            "S26XhW7T", // قسمت 2
+            "K8N3m1P9", // قسمت 3
+            "hV9N7XpS", // قسمت 4
+            "m6Dsh6Pz", // قسمت 5
+            "O8M7m9H6", // قسمت 6
+            "pC7O3X2k", // قسمت 7
+            "T6yS2v4k", // قسمت 8
+            "v9M7n2K1", // قسمت 9 (مثال)
+            "L3b4N5m6"  // قسمت 10 (مثال)
+        ];
 
-        const TOTAL_EP = 70;
+        // خواندن آخرین قسمتی که کاربر دیده از حافظه
+        let currentEpIndex = parseInt(localStorage.getItem('my_tv_last_ep')) || 0;
+        const player = document.getElementById('player');
+        const info = document.getElementById('info');
 
-        // ۱. بازیابی وضعیت قبلی از حافظه مرورگر
-        let currentEp = parseInt(localStorage.getItem('tv_ep')) || 1;
-        let currentTime = parseFloat(localStorage.getItem('tv_time')) || 0;
-
-        function startChannel(ep, time) {
-            const formattedEp = ep < 10 ? '0' + ep : ep;
-            // لینک مستقیم از سرور آپکو که با رفرر مخفی باز می‌شود
-            const url = `https://dl.upko.ir/series/Mosaferan/Mosaferan.E${formattedEp}.480p.Upko.mp4`;
+        function loadEp(index) {
+            if (index >= episodes.length) index = 0; // اگر تمام شد برگرد اول
             
-            source.src = url;
-            epLabel.innerText = ep;
-            player.load();
-            player.currentTime = time;
+            // ساخت لینک پخش
+            // پارامتر autoplay=1 باعث می‌شود ویدیو خودکار آماده پخش شود
+            player.src = "https://www.namasha.com/embed/" + episodes[index] + "?autoplay=1";
             
-            // شروع پخش
-            player.play().catch(() => {
-                console.log("مرورگر اجازه پخش خودکار نداد. کاربر باید یک بار کلیک کند.");
-            });
+            info.innerText = "قسمت: " + (index + 1);
+            
+            // ذخیره در حافظه که کاربر کدام قسمت بوده
+            localStorage.setItem('my_tv_last_ep', index);
+            currentEpIndex = index;
         }
 
-        // ۲. ذخیره مداوم ثانیه و قسمت
-        player.ontimeupdate = () => {
-            if (player.currentTime > 0) {
-                localStorage.setItem('tv_time', player.currentTime);
-                localStorage.setItem('tv_ep', currentEp);
-            }
-        };
+        function nextEpisode() {
+            loadEp(currentEpIndex + 1);
+        }
 
-        // ۳. پخش خودکار قسمت بعدی (بدون دخالت کاربر)
-        player.onended = () => {
-            if (currentEp < TOTAL_EP) {
-                currentEp++;
-                localStorage.setItem('tv_ep', currentEp);
-                localStorage.setItem('tv_time', 0);
-                startChannel(currentEp, 0);
-            } else {
-                currentEp = 1; // شروع مجدد از قسمت اول
-                startChannel(1, 0);
-            }
+        // شروع برنامه به محض باز شدن سایت
+        window.onload = function() {
+            loadEp(currentEpIndex);
         };
-
-        // لود اولیه تلویزیون
-        window.onload = () => startChannel(currentEp, currentTime);
     </script>
 </body>
 </html>
